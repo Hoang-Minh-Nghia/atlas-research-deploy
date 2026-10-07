@@ -1,0 +1,4 @@
+# Luôn dùng LF (kiểu Linux) — script .sh có CRLF sẽ lỗi khi chạy trên server
+* text=auto eol=lf
+*.png binary
+*.jpg binary
