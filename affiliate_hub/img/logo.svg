@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Atlas Research">
+  <defs>
+    <clipPath id="front"><rect x="0" y="36" width="64" height="28"/></clipPath>
+    <clipPath id="knock"><rect x="15" y="36" width="34" height="28"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#0F1B2D"/>
+  <g transform="rotate(-16 32 36)">
+    <ellipse cx="32" cy="36" rx="21.5" ry="8" fill="none" stroke="#D2A85A" stroke-width="2.8"/>
+  </g>
+  <path d="M19.5 48 32 15.5 44.5 48" fill="none" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="rotate(-16 32 36)">
+    <ellipse cx="32" cy="36" rx="21.5" ry="8" fill="none" stroke="#0F1B2D" stroke-width="6.6" clip-path="url(#knock)"/>
+    <ellipse clip-path="url(#front)" cx="32" cy="36" rx="21.5" ry="8" fill="none" stroke="#D2A85A" stroke-width="2.8"/>
+  </g>
+</svg>
