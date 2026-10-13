@@ -1,0 +1,4 @@
+# Cloudflare Pages: trang Affiliate Hub nằm ở gốc site (/),
+# nên chuyển các link /doi-tac/... về đúng chỗ.
+/doi-tac     /         301
+/doi-tac/*   /:splat   301
