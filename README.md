@@ -74,12 +74,16 @@ Trỏ DNS `atlasresearch.blog` và `www.atlasresearch.blog` về IP server trư�
   `/var/www/atlasresearch.blog/affiliate_hub/`). HTML không bị cache nên có hiệu lực ngay.
 - CSS/JS/ảnh được cache 30 ngày. Khi sửa `style.css` hoặc `main.js`, **đổi số phiên bản**
   trong `index.html` (`style.css?v=20261003` → ngày hiện tại) để trình duyệt tải bản mới.
-- Thêm sàn mới: nhân bản một khối `<article class="partner">` trong `index.html`, một dòng
-  trong khối "Truy cập nhanh" và một mục trong `<script type="application/ld+json">`.
-  Màu nhận diện của sàn đặt qua `style="--brand:#mã-màu"`; logo chữ trắng dùng thêm class
-  `partner__plate--dark`.
+- Thêm sàn mới (mỗi sàn là một "chương" màu tràn viền):
+  - nhân bản một khối `<article class="partner">` trong `index.html`. Màu đặt qua
+    `style="--brand:#nền;--brand-ink:#chữ;--brand-deep:#nền-đậm-hơn"` (chữ phải đủ tương phản
+    với nền; hai chương liền nhau nên khác rõ độ sáng). Logo chữ trắng dùng thêm class
+    `partner__plate--dark`;
+  - thêm một ô logo vào khối `.mosaic` ở đầu trang;
+  - thêm sàn vào mảng `OFFICIAL` trong `js/main.js` (công cụ "Kiểm tra link");
+  - thêm một mục trong `<script type="application/ld+json">`.
 - Khi có link giới thiệu: thay thẻ `<span class="btn btn--soon" …>…</span>` bằng
-  `<a class="btn btn--secondary" href="…" target="_blank" rel="noopener sponsored">Link giới thiệu</a>`
+  `<a class="btn btn--secondary" href="…" target="_blank" rel="noopener sponsored" data-partner="tên-sàn" data-placement="referral">Link giới thiệu</a>`
   (nút viền, đặt cạnh nút "Truy cập website").
 - Nếu site gắn Google Analytics / Tag Manager, mỗi lượt click sang sàn được gửi thành sự kiện
   `partner_click` (kèm tên sàn và vị trí nút) — không cần cấu hình thêm.

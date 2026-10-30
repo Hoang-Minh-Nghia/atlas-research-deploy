@@ -6,6 +6,11 @@
 (function () {
   'use strict';
 
+  // Có JS -> bật các trạng thái ẩn ban đầu cho chuyển động (không JS: nội dung hiện đủ)
+  var root = document.documentElement;
+  root.classList.remove('no-js');
+  root.classList.add('js');
+
   // ---- Năm hiện tại ở footer ----
   var yearEl = document.querySelector('[data-year]');
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
@@ -77,4 +82,125 @@
       window.dataLayer.push({ event: 'partner_click', partner: detail.partner, placement: detail.placement });
     }
   });
+
+  // ---- Chuyển động: tiêu đề trượt lên khi tải, từng khối hiện dần khi cuộn tới ----
+  var masked = document.querySelector('.masked');
+  if (masked) requestAnimationFrame(function () { masked.classList.add('is-in'); });
+
+  var reveals = document.querySelectorAll('[data-reveal]');
+  // Các phần tử cùng khối hiện lệch nhau 80ms
+  Array.prototype.forEach.call(reveals, function (el) {
+    var siblings = el.parentElement ? el.parentElement.querySelectorAll(':scope > [data-reveal]') : [];
+    var i = Array.prototype.indexOf.call(siblings, el);
+    if (i > 0) el.style.setProperty('--delay', (i * 80) + 'ms');
+  });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -10% 0px' });
+    Array.prototype.forEach.call(reveals, function (el) { io.observe(el); });
+  } else {
+    Array.prototype.forEach.call(reveals, function (el) { el.classList.add('is-in'); });
+  }
+
+  // ---- Kiểm tra link: so tên miền với danh sách chính thức (chạy hoàn toàn trên máy) ----
+  var OFFICIAL = [
+    { name: 'Moonbase', domain: 'moonbase.vn', url: 'https://moonbase.vn/', key: 'moonbase' },
+    { name: 'SCEX', domain: 'scex.com.vn', url: 'https://scex.com.vn/', key: 'scex' },
+    { name: 'TCEX', domain: 'tcex.com.vn', url: 'https://www.tcex.com.vn/', key: 'tcex' },
+    { name: 'CAEX', domain: 'caex.com.vn', url: 'https://www.caex.com.vn/', key: 'caex' }
+  ];
+
+  function hostnameOf(input) {
+    var text = input.trim();
+    if (!text) return '';
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(text)) text = 'https://' + text;
+    try {
+      return new URL(text).hostname.toLowerCase().replace(/\.$/, '');
+    } catch (err) {
+      return '';
+    }
+  }
+
+  // Khoảng cách chỉnh sửa giữa hai chuỗi, để bắt tên gõ sai cố ý (moonbsae, tcexx…)
+  function distance(a, b) {
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function check(host) {
+    var i, p;
+    for (i = 0; i < OFFICIAL.length; i++) {
+      p = OFFICIAL[i];
+      if (host === p.domain || host.slice(-(p.domain.length + 1)) === '.' + p.domain) {
+        return { kind: 'ok', partner: p };
+      }
+    }
+    var labels = host.split('.');
+    for (i = 0; i < OFFICIAL.length; i++) {
+      p = OFFICIAL[i];
+      if (host.indexOf(p.key) !== -1) return { kind: 'warn', partner: p };
+      for (var k = 0; k < labels.length; k++) {
+        if (labels[k].length >= 3 && distance(labels[k], p.key) <= (p.key.length > 5 ? 2 : 1)) {
+          return { kind: 'warn', partner: p };
+        }
+      }
+    }
+    if (host.indexOf('xn--') !== -1) return { kind: 'warn', partner: null };
+    return { kind: 'unknown' };
+  }
+
+  var form = document.querySelector('[data-checker]');
+  if (form) {
+    var input = form.querySelector('input');
+    var out = form.querySelector('[data-result]');
+
+    function show(kind, html) {
+      out.className = 'checker__result is-' + kind;
+      out.innerHTML = html;
+      out.hidden = false;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var host = hostnameOf(input.value);
+      if (!host) {
+        show('unknown', '<strong>Chưa đọc được đường link</strong>Hãy dán lại, ví dụ: moonbase.vn hoặc https://scex.com.vn/login');
+        return;
+      }
+      var r = check(host);
+      var shown = escapeHtml(host);
+      if (r.kind === 'ok') {
+        show('ok', '<strong>Đúng tên miền chính thức của ' + r.partner.name + '</strong>' + shown +
+          ' thuộc ' + r.partner.domain + '. <a href="' + r.partner.url + '" target="_blank" rel="noopener sponsored" data-partner="' +
+          r.partner.key + '" data-placement="checker">Mở ' + r.partner.domain + '</a>');
+      } else if (r.kind === 'warn') {
+        show('warn', '<strong>Cảnh báo: có thể là trang giả mạo</strong>' + shown + ' không phải tên miền chính thức' +
+          (r.partner ? ' của ' + r.partner.name + ' (' + r.partner.domain + ')' : '') +
+          '. Đừng đăng nhập hay nhập mã OTP ở trang này.');
+      } else {
+        show('unknown', '<strong>Không thuộc bốn sàn trong danh sách</strong>' + shown +
+          ' không khớp với moonbase.vn, scex.com.vn, tcex.com.vn hay caex.com.vn.');
+      }
+    });
+  }
 })();
