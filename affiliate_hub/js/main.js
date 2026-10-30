@@ -263,4 +263,20 @@
       frames[i].scrollIntoView({ behavior: calmMq.matches ? 'auto' : 'smooth', block: 'start' });
     }, { passive: false });
   }
+
+  // ---- Tin tức: hiển thị thời gian đăng dạng "34 phút trước" (không JS: giữ ngày tháng) ----
+  Array.prototype.forEach.call(document.querySelectorAll('time[data-relative]'), function (el) {
+    var t = Date.parse(el.getAttribute('datetime'));
+    if (isNaN(t)) return;
+    var mins = Math.floor((Date.now() - t) / 60000);
+    if (mins < 0) return;
+    var text;
+    if (mins < 1) text = 'Vừa xong';
+    else if (mins < 60) text = mins + ' phút trước';
+    else if (mins < 24 * 60) text = Math.floor(mins / 60) + ' giờ trước';
+    else if (mins < 7 * 24 * 60) text = Math.floor(mins / 1440) + ' ngày trước';
+    else return;   // quá 7 ngày: giữ nguyên ngày tháng
+    el.title = el.textContent;
+    el.textContent = text;
+  });
 })();

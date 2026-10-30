@@ -95,7 +95,8 @@ Mỗi bài là một thư mục riêng: `affiliate_hub/news/<duong-dan-bai>/` ch
    (đường dẫn viết thường, không dấu, nối bằng gạch ngang) rồi thay mọi chỗ `{{...}}`.
 2. Đặt ảnh đầu bài (tỉ lệ 16:9) và ảnh minh hoạ cạnh file `index.html`, tham chiếu bằng tên file.
 3. Dán thẻ bài (mẫu ở cuối file template) vào `affiliate_hub/news/index.html`, ngay sau dòng
-   `<!-- BÀI VIẾT: bắt đầu -->`. Bài mới nhất để trên cùng; bài đầu tiên tự hiển thị to.
+   `<!-- BÀI VIẾT: bắt đầu -->`. Bài mới nhất để trên cùng. Ghi giờ đăng đầy đủ trong `datetime`
+   (ví dụ `2026-10-30T17:45+07:00`) để trang tự hiện "34 phút trước", "3 giờ trước"…
    `view-transition-name:thumb-<duong-dan-bai>` ở ảnh thu nhỏ và ảnh đầu bài phải giống nhau,
    để khi bấm vào bài, ảnh thu nhỏ phóng to thành ảnh đầu bài (trình duyệt hỗ trợ View Transitions).
 4. Thêm URL bài vào `sitemap.xml`.
