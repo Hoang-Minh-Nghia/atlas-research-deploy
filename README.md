@@ -87,6 +87,19 @@ Trỏ DNS `atlasresearch.blog` và `www.atlasresearch.blog` về IP server trư�
 - Nếu site gắn Google Analytics / Tag Manager, mỗi lượt click sang sàn được gửi thành sự kiện
   `partner_click` (kèm tên sàn và vị trí nút) — không cần cấu hình thêm.
 
+## Đăng bài tin tức (tab "Tin tức", thư mục `affiliate_hub/news/`)
+
+Mỗi bài là một thư mục riêng: `affiliate_hub/news/<duong-dan-bai>/` chứa `index.html` và ảnh của bài.
+
+1. Copy `templates/news-article.html` thành `affiliate_hub/news/<duong-dan-bai>/index.html`
+   (đường dẫn viết thường, không dấu, nối bằng gạch ngang) rồi thay mọi chỗ `{{...}}`.
+2. Đặt ảnh đầu bài (tỉ lệ 16:9) và ảnh minh hoạ cạnh file `index.html`, tham chiếu bằng tên file.
+3. Dán thẻ bài (mẫu ở cuối file template) vào `affiliate_hub/news/index.html`, ngay sau dòng
+   `<!-- BÀI VIẾT: bắt đầu -->`. Bài mới nhất để trên cùng; bài đầu tiên tự hiển thị to.
+   `view-transition-name:thumb-<duong-dan-bai>` ở ảnh thu nhỏ và ảnh đầu bài phải giống nhau,
+   để khi bấm vào bài, ảnh thu nhỏ phóng to thành ảnh đầu bài (trình duyệt hỗ trợ View Transitions).
+4. Thêm URL bài vào `sitemap.xml`.
+
 ## Bảo trì định kỳ
 
 ```bash
