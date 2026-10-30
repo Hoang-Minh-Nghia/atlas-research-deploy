@@ -203,4 +203,64 @@
       }
     });
   }
+
+  // ---- Thanh công cụ: gạch chân mục đang xem ----
+  var navLinks = document.querySelectorAll('.bar__nav a[href^="#"]');
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var byId = {};
+    Array.prototype.forEach.call(navLinks, function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+    var watched = ['doi-tac', 'kiem-tra', 'an-toan'];
+    var sections = [];
+    watched.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) sections.push(el);
+    });
+    var navIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var link = byId[entry.target.id];
+        if (link) link.classList.toggle('is-current', entry.isIntersecting);
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    sections.forEach(function (el) { navIo.observe(el); });
+  }
+
+  // ---- Lăn chuột nhảy đúng một khung hình (máy tính, màn hình đủ cao) ----
+  // CSS scroll-snap lo phần lớn; đoạn này giúp mỗi lần lăn chuột/vuốt touchpad
+  // luôn sang đúng khung kế tiếp, kể cả trên trình duyệt xử lý snap khác nhau.
+  var pagedMq = window.matchMedia('(min-width: 900px) and (min-height: 680px)');
+  var calmMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var frames = Array.prototype.slice.call(document.querySelectorAll('.frame'));
+  var bar = document.querySelector('.bar');
+  var locked = false, idleTimer = null, minTimer = null, minDone = true;
+
+  function currentFrame() {
+    var offset = bar ? bar.offsetHeight : 0;
+    var y = window.scrollY + offset, best = 0, bestDist = Infinity;
+    frames.forEach(function (f, i) {
+      var d = Math.abs(f.offsetTop - y);
+      if (d < bestDist) { bestDist = d; best = i; }
+    });
+    return best;
+  }
+
+  function unlockWhenIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () { if (minDone) locked = false; else idleTimer = null; }, 180);
+  }
+
+  if (frames.length) {
+    window.addEventListener('wheel', function (e) {
+      if (!pagedMq.matches || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      if (locked) { unlockWhenIdle(); return; }   // quán tính touchpad: chờ dứt hẳn
+      if (Math.abs(e.deltaY) < 4) return;
+      var i = currentFrame() + (e.deltaY > 0 ? 1 : -1);
+      if (i < 0 || i >= frames.length) return;
+      locked = true; minDone = false;
+      clearTimeout(minTimer);
+      minTimer = setTimeout(function () { minDone = true; if (!idleTimer) locked = false; }, 650);
+      idleTimer = null;
+      frames[i].scrollIntoView({ behavior: calmMq.matches ? 'auto' : 'smooth', block: 'start' });
+    }, { passive: false });
+  }
 })();

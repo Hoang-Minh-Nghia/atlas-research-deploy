@@ -10,8 +10,8 @@
 <meta name="robots" content="index, follow">
 <meta name="google-site-verification" content="0d2XaISK9d_I3VrvTGI-0Q_jA2SwttlX7aFmNDVJa4U">
 <link rel="canonical" href="https://atlas-research-vn.pages.dev/">
-<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0F1B2D" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F6F8FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F6F8FB" media="(prefers-color-scheme: dark)">
 
 <!-- ===================== ICON ===================== -->
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
@@ -40,7 +40,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
-<link rel="stylesheet" href="css/style.css?v=20261030b">
+<link rel="stylesheet" href="css/style.css?v=20261030c">
 
 <!-- ===================== DỮ LIỆU CÓ CẤU TRÚC (schema.org) ===================== -->
 <script type="application/ld+json">
@@ -75,61 +75,45 @@
 
 <a class="skip-link" href="#noi-dung">Bỏ qua điều hướng</a>
 
-<!-- ===================== MASTHEAD: header + khảm logo các sàn ===================== -->
-<header class="masthead">
-  <div class="bar">
-    <a class="bar__brand" href="./">
-      <img src="img/logo.svg" alt="" width="32" height="32">
-      <span>Atlas Research</span>
-    </a>
-    <nav class="bar__nav" aria-label="Điều hướng chính">
-      <a href="#doi-tac">Các sàn</a>
-      <a href="#kiem-tra">Kiểm tra link</a>
-      <a href="#an-toan">An toàn</a>
-    </nav>
-    <a class="bar__action" href="#kiem-tra">Kiểm tra link</a>
-  </div>
-
-  <div class="mosaic">
-    <a class="tile tile--logo tile--wide" href="#moonbase" style="--brand:#1652F0">
-      <img src="img/partners/moonbase.png" alt="Moonbase" width="224" height="69">
-    </a>
-    <span class="tile tile--fill tile--tall" style="background:#1652F0" aria-hidden="true"></span>
-    <a class="tile tile--logo" href="#scex" style="--brand:#C29A3A">
-      <img src="img/partners/scex.png" alt="SCEX" width="230" height="73">
-    </a>
-    <span class="tile tile--fill" style="background:#C29A3A" aria-hidden="true"></span>
-    <span class="tile tile--fill" style="background:#0F1B2D" aria-hidden="true"></span>
-    <a class="tile tile--logo" href="#tcex" style="--brand:#E1251B">
-      <img src="img/partners/tcex.png" alt="TCEX" width="205" height="66">
-    </a>
-    <span class="tile tile--fill" style="background:#E1251B" aria-hidden="true"></span>
-    <a class="tile tile--logo tile--dark" href="#caex" style="--brand:#22C55E">
-      <img src="img/partners/caex.png" alt="CAEX" width="285" height="96">
-    </a>
-    <span class="tile tile--fill tile--wide" style="background:#22C55E" aria-hidden="true"></span>
-  </div>
+<!-- ===================== THANH CÔNG CỤ (dính trên cùng khi cuộn) ===================== -->
+<header class="bar">
+  <a class="bar__brand" href="./">
+    <img src="img/logo.svg" alt="" width="32" height="32">
+    <span>Atlas Research</span>
+  </a>
+  <nav class="bar__nav" aria-label="Điều hướng chính">
+    <a href="#doi-tac">Các sàn</a>
+    <a href="#kiem-tra">Kiểm tra link</a>
+    <a href="#an-toan">An toàn</a>
+  </nav>
+  <a class="btn btn--primary bar__action" href="#kiem-tra">Kiểm tra link</a>
 </header>
 
 <main id="noi-dung">
 
-  <!-- ===================== HERO ===================== -->
-  <section class="hero" aria-labelledby="hero-title">
-    <p class="hero__standfirst" data-reveal>Hệ thống liên kết đa sàn của Atlas Research: địa chỉ thật của bốn sàn giao dịch tài sản mã hóa tại Việt Nam, và một công cụ kiểm tra link trước khi bạn đăng nhập.</p>
-    <div class="hero__main">
+  <!-- ===================== HERO: một tiêu đề, một câu, một nút ===================== -->
+  <section class="frame hero" aria-labelledby="hero-title">
+    <div class="hero__inner">
       <h1 id="hero-title" class="masked"><span class="line"><span>Tên miền</span></span> <span class="line"><span>chính thức</span></span></h1>
+      <p class="hero__standfirst" data-reveal>Địa chỉ thật của bốn sàn giao dịch tài sản mã hóa tại Việt Nam, kèm công cụ kiểm tra link trước khi bạn đăng nhập.</p>
       <div class="hero__actions" data-reveal>
-        <a class="btn btn--primary" href="#kiem-tra">Kiểm tra một đường link</a>
-        <a class="hero__link" href="#doi-tac">Xem bốn sàn</a>
+        <a class="btn btn--primary" href="#doi-tac">Xem bốn sàn</a>
+        <a class="hero__link" href="#kiem-tra">Kiểm tra một đường link</a>
       </div>
     </div>
+    <ul class="hero__logos" aria-label="Các sàn trong danh sách" data-reveal>
+      <li><a href="#moonbase"><img src="img/partners/moonbase.png" alt="Moonbase" width="224" height="69"></a></li>
+      <li><a href="#scex"><img src="img/partners/scex.png" alt="SCEX" width="230" height="73"></a></li>
+      <li><a href="#tcex"><img src="img/partners/tcex.png" alt="TCEX" width="205" height="66"></a></li>
+      <li><a href="#caex" class="is-dark"><img src="img/partners/caex.png" alt="CAEX" width="285" height="96"></a></li>
+    </ul>
   </section>
 
   <!-- ===================== CÁC SÀN: mỗi sàn một chương màu ===================== -->
   <section id="doi-tac" aria-labelledby="partners-title">
     <h2 id="partners-title" class="sr-only">Các nền tảng giao dịch</h2>
 
-    <article class="partner" id="moonbase" style="--brand:#1652F0;--brand-ink:#FFFFFF;--brand-deep:#0D3BB8">
+    <article class="partner frame" id="moonbase" style="--brand:#CFDDFF;--brand-ink:#0F1B2D;--brand-deep:#B5C9FA">
       <div class="partner__text" data-reveal>
         <h3 class="partner__name">Moonbase</h3>
         <p class="partner__tagline">Nền tảng giao dịch tài sản mã hóa tiên phong của Việt Nam.</p>
@@ -156,7 +140,7 @@
       </div>
     </article>
 
-    <article class="partner" id="scex" style="--brand:#C29A3A;--brand-ink:#0F1B2D;--brand-deep:#A9822A">
+    <article class="partner frame" id="scex" style="--brand:#F4E6C2;--brand-ink:#0F1B2D;--brand-deep:#E8D6A4">
       <div class="partner__text" data-reveal>
         <h3 class="partner__name">SCEX</h3>
         <p class="partner__tagline">Hệ sinh thái an toàn cho tài sản số Việt.</p>
@@ -183,7 +167,7 @@
       </div>
     </article>
 
-    <article class="partner" id="tcex" style="--brand:#D7231A;--brand-ink:#FFFFFF;--brand-deep:#AE1A12">
+    <article class="partner frame" id="tcex" style="--brand:#FFD9D3;--brand-ink:#0F1B2D;--brand-deep:#F7C1B8">
       <div class="partner__text" data-reveal>
         <h3 class="partner__name">TCEX</h3>
         <p class="partner__tagline">Sàn giao dịch tập trung minh bạch và hiệu quả.</p>
@@ -210,7 +194,7 @@
       </div>
     </article>
 
-    <article class="partner" id="caex" style="--brand:#07140C;--brand-ink:#FFFFFF;--brand-deep:#123321">
+    <article class="partner frame" id="caex" style="--brand:#CFEFDB;--brand-ink:#0F1B2D;--brand-deep:#B3E3C5">
       <div class="partner__text" data-reveal>
         <h3 class="partner__name">CAEX</h3>
         <p class="partner__tagline">Sàn giao dịch tài sản mã hóa Việt Nam Thịnh Vượng.</p>
@@ -239,7 +223,7 @@
   </section>
 
   <!-- ===================== KIỂM TRA LINK (công cụ chạy trên trình duyệt) ===================== -->
-  <section class="checker" id="kiem-tra" aria-labelledby="checker-title">
+  <section class="frame checker" id="kiem-tra" aria-labelledby="checker-title">
     <div class="checker__intro" data-reveal>
       <h2 id="checker-title">Link này có thật không?</h2>
       <p>Dán đường link bạn nhận được qua tin nhắn, email hay nhóm chat. Trang sẽ so với bốn tên miền chính thức ở trên và báo nếu đó là trang nhái. Việc kiểm tra diễn ra ngay trên máy bạn, không gửi đi đâu cả.</p>
@@ -257,7 +241,7 @@
   </section>
 
   <!-- ===================== LƯU Ý AN TOÀN (FAQ) ===================== -->
-  <section class="faq" id="an-toan" aria-labelledby="safety-title">
+  <section class="frame faq" id="an-toan" aria-labelledby="safety-title">
     <h2 id="safety-title" data-reveal>Trước khi giao dịch</h2>
     <div class="faq__list" data-reveal>
       <details name="faq" open>
@@ -294,7 +278,7 @@
 </main>
 
 <!-- ===================== FOOTER ===================== -->
-<footer class="site-footer">
+<footer class="frame site-footer">
   <p class="site-footer__name" aria-hidden="true">Atlas Research</p>
   <div class="site-footer__row">
     <nav class="site-footer__places" aria-label="Liên kết chân trang">
@@ -313,6 +297,6 @@
   </div>
 </footer>
 
-<script src="js/main.js?v=20261030b" defer></script>
+<script src="js/main.js?v=20261030c" defer></script>
 </body>
 </html>

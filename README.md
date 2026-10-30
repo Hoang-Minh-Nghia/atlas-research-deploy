@@ -75,11 +75,10 @@ Trỏ DNS `atlasresearch.blog` và `www.atlasresearch.blog` về IP server trư�
 - CSS/JS/ảnh được cache 30 ngày. Khi sửa `style.css` hoặc `main.js`, **đổi số phiên bản**
   trong `index.html` (`style.css?v=20261003` → ngày hiện tại) để trình duyệt tải bản mới.
 - Thêm sàn mới (mỗi sàn là một "chương" màu tràn viền):
-  - nhân bản một khối `<article class="partner">` trong `index.html`. Màu đặt qua
-    `style="--brand:#nền;--brand-ink:#chữ;--brand-deep:#nền-đậm-hơn"` (chữ phải đủ tương phản
-    với nền; hai chương liền nhau nên khác rõ độ sáng). Logo chữ trắng dùng thêm class
-    `partner__plate--dark`;
-  - thêm một ô logo vào khối `.mosaic` ở đầu trang;
+  - nhân bản một khối `<article class="partner frame">` trong `index.html`. Màu pastel đặt qua
+    `style="--brand:#nền-pastel;--brand-ink:#0F1B2D;--brand-deep:#pastel-đậm-hơn"`. Logo chữ
+    trắng dùng thêm class `partner__plate--dark`. Nội dung mỗi khung phải vừa một màn hình;
+  - thêm một ô logo vào danh sách `.hero__logos` ở khung mở đầu;
   - thêm sàn vào mảng `OFFICIAL` trong `js/main.js` (công cụ "Kiểm tra link");
   - thêm một mục trong `<script type="application/ld+json">`.
 - Khi có link giới thiệu: thay thẻ `<span class="btn btn--soon" …>…</span>` bằng
