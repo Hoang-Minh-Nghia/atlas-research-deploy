@@ -101,6 +101,59 @@ Mỗi bài là một thư mục riêng: `affiliate_hub/news/<duong-dan-bai>/` ch
    để khi bấm vào bài, ảnh thu nhỏ phóng to thành ảnh đầu bài (trình duyệt hỗ trợ View Transitions).
 4. Thêm URL bài vào `sitemap.xml`.
 
+## Agent tin tức tự động (VnExpress → viết lại → duyệt qua Telegram)
+
+Thư mục `news_agent/` (không deploy lên web). Chạy trên **máy Windows có GPU** (máy studio YouTube),
+vì ảnh được vẽ miễn phí bằng ComfyUI + FLUX.2 klein qua `lib\images.py` của studio.
+
+- **Mỗi 60 phút** (tác vụ `AtlasNews-Scan`): quét `https://vnexpress.net/tag/tai-san-so-1064801`,
+  với mỗi bài mới (tối đa `MAX_PER_RUN`, chống trùng theo URL và hash nội dung):
+  1. viết lại bằng lời văn của Atlas Research qua OpenRouter (`llm.py`, theo bộ rewrite kit của
+     Social_product: tự chọn model rẻ nhất trong danh mục đã kiểm định, bảng giá cache 24h,
+     model lỗi thì thử model kế tiếp, lỗi 401/402/403 thì dừng, luôn tắt reasoning);
+  2. vẽ ảnh đầu bài + ảnh minh hoạ bằng GPU (16:9, phong cách ảnh bìa tin crypto 3D);
+  3. gửi lên Telegram: ảnh + sapo, file `preview.html` đọc toàn văn, và các nút
+     **✅ Duyệt / 🔁 Viết lại / 🎨 Ảnh khác / ❌ Bỏ**. Lần chạy đầu chỉ lấy vài bài mới nhất.
+- **Bot duyệt** (tác vụ `AtlasNews-Bot`, luôn chạy): **Duyệt** → thêm bài vào
+  `affiliate_hub/news/<slug>/`, chèn thẻ vào `news/index.html`, thêm URL vào `sitemap.xml`,
+  commit `Tin tức: <tiêu đề>`, push lên `GIT_BRANCH` → Cloudflare Pages tự deploy.
+  **🎨 Ảnh khác** chỉ vẽ lại ảnh (seed mới). Muốn sửa chữ: **reply** tin có nút bằng yêu cầu.
+  Chỉ id trong `TELEGRAM_ALLOWED_USER_IDS` mới bấm được; nháp không duyệt sau 7 ngày tự xoá.
+- **Quy tắc GPU** (theo "Họa sĩ GPU"): card 6 GB chỉ làm một việc một lúc. Nếu ComfyUI đang chạy sẵn
+  (studio đang dùng), agent **nhường** và để lượt sau (`COMFY_SHARED=1` để dùng chung,
+  `IMAGE_FALLBACK=openrouter` để vẽ bằng OpenRouter khi GPU bận). Agent tự bật ComfyUI khi cần
+  và **tắt ngay** khi vẽ xong. Máy tắt thì lượt quét bị lỡ sẽ chạy bù khi bật lại.
+- Bài luôn ghi "Nguồn tham khảo: VnExpress" kèm link gốc và dòng miễn trừ; prompt ép trung thực,
+  diễn đạt lại hoàn toàn. Ảnh không vẽ người thật, không logo thương hiệu thật.
+  Sửa giọng văn: `news_agent/prompts/rewrite.md`; phong cách ảnh: `news_agent/prompts/image.md`.
+
+Cài trên máy Windows (Python ≥ 3.10, git đã đăng nhập GitHub có quyền push):
+
+1. Tạo bot qua [@BotFather](https://t.me/BotFather) lấy token. Nhắn cho bot (hoặc thêm bot vào nhóm),
+   mở `https://api.telegram.org/bot<TOKEN>/getUpdates` để lấy `chat.id` và id người duyệt (`from.id`).
+2. Chạy (lần đầu script clone repo riêng cho agent, tạo venv và file cấu hình rồi dừng):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\news-agent-install.ps1 -RepoDir D:\atlas-news\repo
+   ```
+3. Điền `%LOCALAPPDATA%\atlas-news\atlas-news.env`: `OPENROUTER_API_KEY`, `TELEGRAM_*`,
+   `STUDIO_LIB_DIR` (thư mục `lib` có `images.py`), `STUDIO_PYTHON` (Python có torch/gguf của studio).
+4. Chạy lại lệnh ở bước 2 để đăng ký 2 tác vụ. Kiểm tra:
+   ```powershell
+   Start-ScheduledTask AtlasNews-Scan
+   Get-Content "$env:LOCALAPPDATA\atlas-news\logs\bot.log" -Wait
+   ```
+
+Chạy thử không gửi Telegram, không ghi trạng thái (trong thư mục repo, đã điền `news_agent\.env`):
+```powershell
+python -m news_agent.scan --dry-run --limit 1 --out .\news-agent-dry-run
+```
+
+Lưu ý: thư mục `-RepoDir` là bản clone riêng của agent — mỗi lần đăng bài agent `reset --hard` về
+`origin/<GIT_BRANCH>`, đừng sửa tay ở đó. Danh mục model mặc định được đo trên bài tiếng Anh ngắn;
+chạy `--dry-run` vài bài rồi chỉnh `LLM_REWRITE_CATALOG` nếu cần. Không có GPU (VPS Linux) thì dùng
+`sudo bash scripts/news-agent-install.sh` với `IMAGE_BACKEND=openrouter` (systemd). Bản Nginx trên server
+(`/doi-tac/`) không tự cập nhật — chạy lại `setup.sh` như mục "Cập nhật Affiliate Hub" nếu dùng.
+
 ## Bảo trì định kỳ
 
 ```bash
