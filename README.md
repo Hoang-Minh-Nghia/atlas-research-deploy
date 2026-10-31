@@ -101,6 +101,51 @@ Mỗi bài là một thư mục riêng: `affiliate_hub/news/<duong-dan-bai>/` ch
    để khi bấm vào bài, ảnh thu nhỏ phóng to thành ảnh đầu bài (trình duyệt hỗ trợ View Transitions).
 4. Thêm URL bài vào `sitemap.xml`.
 
+## Agent tin tức tự động (VnExpress → viết lại → duyệt qua Telegram)
+
+Thư mục `news_agent/` (không deploy lên web) chạy trên server bằng systemd:
+
+- **Mỗi 60 phút** (`atlas-news-scan.timer`): quét `https://vnexpress.net/tag/tai-san-so-1064801`,
+  với mỗi bài mới (tối đa `MAX_PER_RUN`) viết lại bằng lời văn của Atlas Research và tạo ảnh
+  mới qua OpenRouter, rồi gửi lên Telegram: ảnh đầu bài + sapo, file `preview.html` để đọc toàn văn,
+  và 3 nút **✅ Duyệt / 🔁 Viết lại / ❌ Bỏ**. Lần chạy đầu chỉ lấy vài bài mới nhất.
+- **Bot duyệt** (`atlas-news-bot.service`, luôn chạy): bấm **Duyệt** → agent thêm bài vào
+  `affiliate_hub/news/<slug>/`, chèn thẻ vào `news/index.html`, thêm URL vào `sitemap.xml`,
+  commit `Tin tức: <tiêu đề>` và push lên `GIT_BRANCH` → Cloudflare Pages tự deploy.
+  Muốn sửa: **reply** tin có nút bằng yêu cầu (vd. "ngắn hơn, nhấn mạnh rủi ro"), agent viết lại.
+  Chỉ id trong `TELEGRAM_ALLOWED_USER_IDS` mới bấm được; nháp không duyệt sau 7 ngày tự xoá.
+- Bài viết lại luôn ghi "Nguồn tham khảo: VnExpress" kèm link bài gốc; prompt yêu cầu diễn đạt lại
+  hoàn toàn, không chép câu, không dùng ảnh gốc. Sửa giọng văn ở `news_agent/prompts/rewrite.md`,
+  phong cách ảnh ở `news_agent/prompts/image.md` (không cần sửa code).
+
+Cài đặt:
+
+1. Tạo bot qua [@BotFather](https://t.me/BotFather) lấy token. Nhắn cho bot (hoặc thêm bot vào nhóm),
+   mở `https://api.telegram.org/bot<TOKEN>/getUpdates` để lấy `chat.id` và id người duyệt (`from.id`).
+2. `sudo bash scripts/news-agent-install.sh` — lần đầu script tạo user `atlas-news`, deploy key và
+   `/etc/atlas-news.env` rồi dừng: dán public key được in ra vào GitHub (repo → Settings → Deploy keys,
+   tick **Allow write access**), điền `OPENROUTER_API_KEY`, model, `TELEGRAM_*` trong `/etc/atlas-news.env`.
+3. Chạy lại `sudo bash scripts/news-agent-install.sh` để clone repo vào `/opt/atlas-news`, cài
+   virtualenv và bật dịch vụ. Nhánh `GIT_BRANCH` phải có sẵn thư mục `news_agent/`.
+
+```bash
+sudo systemctl start atlas-news-scan          # quét ngay, không chờ đủ giờ
+sudo journalctl -u atlas-news-bot -f          # theo dõi bot duyệt
+sudo journalctl -u atlas-news-scan -n 100     # log lần quét gần nhất
+```
+
+Chạy thử không gửi Telegram, không ghi trạng thái (cần `OPENROUTER_API_KEY` trong môi trường):
+```bash
+pip install -r news_agent/requirements.txt
+OPENROUTER_API_KEY=... python3 -m news_agent.scan --dry-run --limit 1 --out ./news-agent-dry-run
+```
+
+Lưu ý: `/opt/atlas-news` là bản clone riêng của agent — mỗi lần đăng bài agent `reset --hard` về
+`origin/<GIT_BRANCH>`, đừng sửa tay ở đó. Sau khi cập nhật code agent trên GitHub, chạy
+`sudo systemctl restart atlas-news-bot` để bot nạp code mới (lịch quét tự dùng code mới).
+Bản Nginx trên server (`/doi-tac/`) không tự cập nhật — chạy lại `setup.sh` như mục
+"Cập nhật Affiliate Hub" nếu dùng.
+
 ## Bảo trì định kỳ
 
 ```bash
