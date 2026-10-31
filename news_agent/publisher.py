@@ -1,8 +1,8 @@
 """Đưa bản nháp đã duyệt vào repo, commit và push."""
 from __future__ import annotations
 
-import fcntl
 import logging
+import os
 import shutil
 import subprocess
 import time
@@ -16,18 +16,37 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def repo_lock():
+    """Khoá file đa nền tảng (fcntl trên Linux, msvcrt trên Windows)."""
     config.STATE_DIR.mkdir(parents=True, exist_ok=True)
-    with open(config.LOCK_PATH, "w") as fh:
-        fcntl.flock(fh, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(fh, fcntl.LOCK_UN)
+    with open(config.LOCK_PATH, "a+") as fh:
+        if os.name == "nt":
+            import msvcrt
+
+            fh.seek(0)
+            while True:
+                try:
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+                    break
+                except OSError:  # LK_LOCK chỉ thử ~10 giây rồi báo lỗi
+                    time.sleep(1)
+            try:
+                yield
+            finally:
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(fh, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def git(*args: str) -> str:
     res = subprocess.run(
-        ["git", "-C", str(config.REPO_DIR), *args], capture_output=True, text=True, timeout=180
+        ["git", "-C", str(config.REPO_DIR), *args], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180
     )
     if res.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} lỗi: {res.stderr.strip() or res.stdout.strip()}")

@@ -62,8 +62,11 @@ def review_keyboard(draft_id: int) -> dict:
             [
                 {"text": "✅ Duyệt", "callback_data": f"approve:{draft_id}"},
                 {"text": "🔁 Viết lại", "callback_data": f"rewrite:{draft_id}"},
+            ],
+            [
+                {"text": "🎨 Ảnh khác", "callback_data": f"images:{draft_id}"},
                 {"text": "❌ Bỏ", "callback_data": f"reject:{draft_id}"},
-            ]
+            ],
         ]
     }
 

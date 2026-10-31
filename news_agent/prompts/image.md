@@ -1,6 +1,1 @@
-High-quality editorial illustration for a Vietnamese crypto and digital-asset news article.
-Style: modern, clean, cinematic lighting, rich detail, professional news-magazine cover quality, soft pastel accents (mint, sky blue, lavender, peach) over a calm navy palette.
-Composition: wide 16:9 landscape, clear focal subject, uncluttered background, room around the subject so it can be cropped.
-Strict rules: no text, no letters, no numbers, no watermarks, no real company logos or brand marks, no real people or celebrity likenesses, no charts with readable labels.
-
-Scene:
+3D digital illustration in the style of a crypto news cover image, photorealistic glossy render, cinematic lighting, deep navy and electric blue palette with warm gold highlights, glowing holographic interface elements, circuit-board patterns and floating binary code in the background, shallow depth of field, high detail, sharp focus, wide 16:9 composition with a clear main subject, no watermark, no real people, no brand logos.

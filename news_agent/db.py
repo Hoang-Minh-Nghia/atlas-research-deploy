@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS drafts (
     updated_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS drafts_status ON drafts(status);
+CREATE TABLE IF NOT EXISTS seen_hashes (
+    hash TEXT PRIMARY KEY,
+    seen_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT);
 """
 
 
@@ -48,6 +53,24 @@ def is_seen(url: str) -> bool:
 def mark_seen(url: str) -> None:
     with connect() as c:
         c.execute("INSERT OR IGNORE INTO seen_urls(url, seen_at) VALUES(?, ?)", (url, int(time.time())))
+
+
+def hash_seen(h: str) -> bool:
+    with connect() as c:
+        return c.execute("SELECT 1 FROM seen_hashes WHERE hash=?", (h,)).fetchone() is not None
+
+
+def mark_hash(h: str) -> None:
+    with connect() as c:
+        c.execute("INSERT OR IGNORE INTO seen_hashes(hash, seen_at) VALUES(?, ?)", (h, int(time.time())))
+
+
+def update_data(draft_id: int, data: dict) -> None:
+    with connect() as c:
+        c.execute(
+            "UPDATE drafts SET data=?, updated_at=? WHERE id=?",
+            (json.dumps(data, ensure_ascii=False), int(time.time()), draft_id),
+        )
 
 
 def add_draft(slug: str, source_url: str, title: str, data: dict) -> int:
@@ -97,12 +120,10 @@ def expired_pending(ttl_days: int):
 
 def get_kv(key: str, default: str = "") -> str:
     with connect() as c:
-        c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
         row = c.execute("SELECT v FROM kv WHERE k=?", (key,)).fetchone()
         return row["v"] if row else default
 
 
 def set_kv(key: str, value: str) -> None:
     with connect() as c:
-        c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
         c.execute("INSERT OR REPLACE INTO kv(k, v) VALUES(?, ?)", (key, value))

@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
 news-agent-dry-run/
+news_agent/.env

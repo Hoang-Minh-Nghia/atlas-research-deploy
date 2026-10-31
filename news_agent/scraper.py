@@ -1,6 +1,7 @@
 """Lấy danh sách bài và nội dung bài gốc từ trang tag VnExpress."""
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -26,6 +27,11 @@ class SourceArticle:
     paragraphs: list[str] = field(default_factory=list)
     published: str = ""  # ISO 8601 nếu đọc được
     category: str = ""
+
+    def content_hash(self) -> str:
+        """Hash nội dung (chống viết trùng khi cùng bài đổi URL)."""
+        norm = re.sub(r"\s+", " ", " ".join([self.title, *self.paragraphs])).strip().lower()
+        return hashlib.sha256(norm.encode("utf-8")).hexdigest()
 
     def as_text(self) -> str:
         return "\n\n".join([self.title, self.description, *self.paragraphs])

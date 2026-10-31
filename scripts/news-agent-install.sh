@@ -83,8 +83,11 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     cat > "${ENV_FILE}" <<EOF
 # Cấu hình agent tin tức — sửa xong chạy lại: sudo bash scripts/news-agent-install.sh
 OPENROUTER_API_KEY=__CHANGE_ME__
-# Model viết bài và model tạo ảnh trên OpenRouter (đổi theo model đang dùng ở dự án khác)
-OPENROUTER_TEXT_MODEL=anthropic/claude-sonnet-4.5
+# Viết lại: để trống = tự chọn model rẻ nhất trong danh mục (xem news_agent/llm.py)
+LLM_REWRITE_MODEL=
+LLM_REWRITE_CATALOG=
+# Server Linux không có GPU → tạo ảnh qua OpenRouter
+IMAGE_BACKEND=openrouter
 OPENROUTER_IMAGE_MODEL=google/gemini-2.5-flash-image
 FIGURES_PER_ARTICLE=1
 

@@ -12,7 +12,7 @@ import sys
 from html import escape
 from pathlib import Path
 
-from . import config, db, pipeline, scraper, telegram
+from . import config, db, imager, pipeline, scraper, telegram
 
 log = logging.getLogger("news_agent.scan")
 
@@ -49,18 +49,45 @@ def run(limit: int) -> int:
             db.mark_seen(u)
         db.set_kv("initialized", "1")
     urls = urls[:limit]
-    log.info("Có %d bài mới", len(urls))
+
+    sources = []
     failures = 0
     for url in reversed(urls):  # cũ trước, mới sau
         try:
             src = scraper.fetch_article(url, session)
-            draft_id = pipeline.create_and_send(src)
-            db.mark_seen(url)
-            log.info("Đã gửi nháp #%d cho %s", draft_id, url)
-        except Exception as e:  # noqa: BLE001 — một bài lỗi không chặn bài khác
+        except Exception as e:  # noqa: BLE001
             failures += 1
-            log.exception("Lỗi xử lý %s", url)
-            notify_error(f"lỗi xử lý {url}: {e}")
+            log.exception("Không đọc được %s", url)
+            notify_error(f"không đọc được {url}: {e}")
+            continue
+        if db.hash_seen(src.content_hash()):
+            log.info("Bỏ qua (trùng nội dung đã viết): %s", url)
+            db.mark_seen(url)
+            continue
+        sources.append(src)
+    log.info("Có %d bài mới cần viết", len(sources))
+    if not sources:
+        return 1 if failures else 0
+
+    try:
+        with imager.session():
+            for src in sources:
+                try:
+                    draft_id = pipeline.create_and_send(src)
+                except imager.GpuBusy:
+                    raise
+                except Exception as e:  # noqa: BLE001 — một bài lỗi không chặn bài khác
+                    failures += 1
+                    log.exception("Lỗi xử lý %s", src.url)
+                    notify_error(f"lỗi xử lý {src.url}: {e}")
+                    continue
+                db.mark_seen(src.url)
+                db.mark_hash(src.content_hash())
+                log.info("Đã gửi nháp #%d cho %s", draft_id, src.url)
+    except imager.GpuBusy as e:
+        # Không đánh dấu đã xem: lượt sau làm lại khi GPU rảnh.
+        log.warning("GPU bận, để lượt sau: %s", e)
+        return 0
     return 1 if failures else 0
 
 
@@ -71,12 +98,13 @@ def dry_run(limit: int, out: Path) -> int:
     print(f"Tìm thấy {len(urls)} bài trên trang nguồn:")
     for u in urls:
         print("  ", u)
-    for url in urls[:limit]:
-        src = scraper.fetch_article(url, session)
-        article = pipeline.build_draft(src, out_root=out)
-        folder = out / article["slug"]
-        (folder / "article.json").write_text(json.dumps(article, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"Đã dựng nháp: {folder}/index.html (xem nhanh: {folder}/preview.html)")
+    with imager.session():
+        for url in urls[:limit]:
+            src = scraper.fetch_article(url, session)
+            article = pipeline.build_draft(src, out_root=out)
+            folder = out / article["slug"]
+            (folder / "article.json").write_text(json.dumps(article, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"Đã dựng nháp ({article['model']}): {folder / 'index.html'} (xem nhanh: {folder / 'preview.html'})")
     return 0
 
 

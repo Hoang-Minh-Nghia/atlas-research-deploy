@@ -34,39 +34,48 @@ def build_draft(src: SourceArticle, feedback: str = "", out_root: Path | None = 
     article["published"] = now_iso()
     folder = (out_root or config.DRAFTS_DIR) / article["slug"]
     try:
-        imager.generate(article["hero_image"]["prompt"], folder / "thumb.jpg")
-        for i, fig in enumerate(article["figures"], 1):
-            try:
-                imager.generate(fig["prompt"], folder / f"fig-{i}.jpg")
-                fig["file"] = f"fig-{i}.jpg"
-            except RuntimeError as e:  # ảnh phụ lỗi thì bỏ qua, ảnh đầu bài bắt buộc
-                log.warning("Bỏ ảnh minh hoạ %d: %s", i, e)
-        builder.write_draft(article, folder)
-        builder.write_preview(folder)
+        make_images(article, folder)
     except Exception:
         shutil.rmtree(folder, ignore_errors=True)
         raise
     return article
 
 
+def make_images(article: dict, folder: Path) -> None:
+    """Tạo (lại) toàn bộ ảnh với seed mới rồi dựng lại trang. Gọi trong imager.session()."""
+    article["hero_image"]["seed"] = imager.generate(article["hero_image"]["prompt"], folder / "thumb.jpg")
+    for i, fig in enumerate(article["figures"], 1):
+        fig.pop("file", None)
+        try:
+            fig["seed"] = imager.generate(fig["prompt"], folder / f"fig-{i}.jpg")
+            fig["file"] = f"fig-{i}.jpg"
+        except RuntimeError as e:  # ảnh phụ lỗi thì bỏ qua, ảnh đầu bài bắt buộc
+            log.warning("Bỏ ảnh minh hoạ %d: %s", i, e)
+            (folder / f"fig-{i}.jpg").unlink(missing_ok=True)
+    builder.write_draft(article, folder)
+    builder.write_preview(folder)
+
+
 def send_for_review(article: dict, draft_id: int) -> None:
     folder = draft_dir(article["slug"])
     caption = (
         f"<b>{escape(article['title'])}</b>\n\n{escape(article['lead'])}\n\n"
-        f"Chuyên mục: {escape(article['category'])}\n"
+        f"Chuyên mục: {escape(article['category'])} · model: {escape(article.get('model', '?'))}\n"
         f"Bài gốc: {escape(article['source_url'])}"
     )
     telegram.send_photo(folder / "thumb.jpg", caption)
     telegram.send_document(folder / "preview.html", "Mở file để đọc toàn văn bài viết lại.")
     msg = telegram.send_message(
         f"Bản nháp #{draft_id} · <code>{escape(article['slug'])}</code>\n"
-        "Duyệt để đăng lên tab Tin tức. Muốn sửa: trả lời (reply) tin này bằng yêu cầu, agent sẽ viết lại.",
+        "Duyệt để đăng lên tab Tin tức. 🎨 Ảnh khác: chỉ vẽ lại ảnh (seed mới).\n"
+        "Muốn sửa bài: trả lời (reply) tin này bằng yêu cầu, agent sẽ viết lại.",
         reply_markup=telegram.review_keyboard(draft_id),
     )
     db.set_message_id(draft_id, msg["message_id"])
 
 
 def create_and_send(src: SourceArticle, feedback: str = "") -> int:
+    """Gọi trong imager.session()."""
     article = build_draft(src, feedback)
     draft_id = db.add_draft(article["slug"], src.url, article["title"], article)
     try:

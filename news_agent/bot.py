@@ -10,7 +10,7 @@ import sys
 import time
 from html import escape
 
-from . import config, db, pipeline, publisher, telegram
+from . import config, db, imager, pipeline, publisher, telegram
 from .scraper import SourceArticle
 
 log = logging.getLogger("news_agent.bot")
@@ -25,17 +25,47 @@ def _in_review_chat(chat_id) -> bool:
 
 
 def _rewrite(draft: dict, feedback: str = "") -> None:
+    """Viết lại cả bài; nháp cũ chỉ bị thay khi bản mới đã gửi thành công."""
     data = json.loads(draft["data"])
-    if not db.set_status(draft["id"], "superseded", expect="pending"):
-        telegram.send_message(f"Nháp #{draft['id']} không còn chờ duyệt.")
-        return
-    pipeline.discard(draft)
     telegram.send_message(f"🔁 Đang viết lại nháp #{draft['id']}…")
     try:
-        pipeline.create_and_send(SourceArticle(**data["source"]), feedback)
+        with imager.session():
+            new_id = pipeline.create_and_send(SourceArticle(**data["source"]), feedback)
+    except imager.GpuBusy as e:
+        telegram.send_message(
+            f"⏳ GPU đang bận ({escape(str(e))}). Nháp #{draft['id']} giữ nguyên, thử lại sau.",
+            reply_markup=telegram.review_keyboard(draft["id"]),
+        )
+        return
     except Exception as e:  # noqa: BLE001
         log.exception("Viết lại thất bại")
-        telegram.send_message(f"⚠️ Viết lại nháp #{draft['id']} thất bại: {escape(str(e))[:3000]}")
+        telegram.send_message(
+            f"⚠️ Viết lại nháp #{draft['id']} thất bại: {escape(str(e))[:3000]}",
+            reply_markup=telegram.review_keyboard(draft["id"]),
+        )
+        return
+    if db.set_status(draft["id"], "superseded", expect="pending"):
+        pipeline.discard(draft)
+    log.info("Nháp #%s được thay bằng #%s", draft["id"], new_id)
+
+
+def _new_images(draft: dict) -> None:
+    """Chỉ vẽ lại ảnh với seed mới, giữ nguyên chữ."""
+    article = json.loads(draft["data"])
+    folder = pipeline.draft_dir(draft["slug"])
+    telegram.send_message(f"🎨 Đang vẽ lại ảnh cho nháp #{draft['id']}…")
+    try:
+        with imager.session():
+            pipeline.make_images(article, folder)
+    except imager.GpuBusy as e:
+        telegram.send_message(f"⏳ GPU đang bận ({escape(str(e))}), thử lại sau.", reply_markup=telegram.review_keyboard(draft["id"]))
+        return
+    except Exception as e:  # noqa: BLE001
+        log.exception("Vẽ lại ảnh thất bại")
+        telegram.send_message(f"⚠️ Vẽ lại ảnh thất bại: {escape(str(e))[:3000]}", reply_markup=telegram.review_keyboard(draft["id"]))
+        return
+    db.update_data(draft["id"], article)
+    pipeline.send_for_review(article, draft["id"])
 
 
 def handle_callback(cb: dict) -> None:
@@ -77,6 +107,9 @@ def handle_callback(cb: dict) -> None:
     elif action == "rewrite":
         telegram.answer_callback(cb["id"], "Đang viết lại…")
         _rewrite(draft)
+    elif action == "images":
+        telegram.answer_callback(cb["id"], "Đang vẽ lại ảnh…")
+        _new_images(draft)
     elif action == "reject":
         if db.set_status(draft["id"], "rejected", expect="pending"):
             pipeline.discard(draft)
